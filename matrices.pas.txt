@@ -1,0 +1,697 @@
+program Matrices_application;
+
+        uses crt;
+
+        const msize = 10;
+
+        Type    Matrix = Record
+                        m: Integer;     // number of rows
+                        n: Integer;     // number of columns
+                        mat:Array[1..msize, 1..msize] of Real;
+                end;
+
+                PMat = ^Matrix;
+
+                Words = array of String;
+
+                RMatrix = Array[1..msize, 1..2*msize] of Real;
+
+        var matrices:Array['a'..'z'] of PMat;
+        var i, j, k, m, n: Integer;
+        var command: String;
+        var wn:real;
+        var dn:integer;
+
+        {
+
+        A D D I T I O N A L   P R O C E D U R E S
+
+        }
+procedure writec(s:String; c:integer);
+begin
+        textcolor(c);
+        textbackground(white);
+        write(s);
+        textbackground(black);
+        textcolor(white);
+        writeln;
+
+end;
+
+function Occurs(const str, separator: string): integer;
+var
+i, nSep: integer;
+begin
+        nSep:= 0;
+        for i:= 1 to Length(str) do
+        if str[i] = separator then Inc(nSep);
+        Occurs:= nSep;
+end;
+
+
+function Split(const str: string; const separator: string): Words;
+
+var    i, n: integer;
+        strline, strfield: string;
+begin
+        n:= Occurs(str, separator);
+        SetLength(Split, n + 1);
+        i := 0;
+        strline:= str;
+        repeat
+        if Pos(separator, strline) > 0 then
+        begin
+                strfield:= Copy(strline, 1, Pos(separator, strline) - 1);
+                strline:= Copy(strline, Pos(separator, strline) + 1, Length(strline) - pos(separator,strline));
+        end
+        else
+        begin
+                strfield:= strline;
+                strline:= '';
+        end;
+        Split[i]:= strfield;
+        Inc(i);
+        until strline= '';
+        if Split[High(Split)] = '' then SetLength(Split, Length(Split) -1);
+end;
+
+procedure listR(m:RMatrix; a,b:integer);
+var v,w:integer;
+begin
+        for v:= 1 to a do
+        begin
+                for w:= 1 to b do write(m[v,w]:10:dn, ', ');
+                writeln;
+        end;
+        writeln;
+end;
+{
+procedure readN();
+var s:String;
+    l, nop:integer;
+    isNum:Boolean;
+begin
+        readln(s);
+        isNum:=true;
+        nop:=0;       // number of decimal points
+        if(s[1]='.') OR (s[length(s)]='.') then isNum:=false
+        else for l:= 1 to Length(s) do
+        begin
+                writeln(ord(s[l]));
+                if (ord(s[l])<46) OR (ord(s[l]) > 58) then
+                begin
+                        if ord(s[l]) = 14 then write('tecka');//inc(nop);
+                        writeln(s[l], ' nen¡ Ÿ¡slo ');
+                        if s[l]<>'.' then
+                        begin
+                                isNum:=false;
+                                //break;
+                        end;
+
+                end;
+        end;
+        writeln(nop);
+        if nop>1 then isNum:=false;
+
+        if(NOT isNum) then
+        begin
+                writeC('You inserted a wrong number.', red);
+                rn:= wn;
+        end
+        else val(s,rn,l);
+
+end;
+}
+        {
+
+        P R O G R A M   P R O C E D U R E S
+
+        }
+procedure help;
+var r:Real;
+begin
+       writec('H E L P', blue);
+       writeln;
+       writeln('You can operate with 26 matrices named "a" to "z".');
+       writeln;
+       writeln('Functions in program you can use:');
+       writeln;
+       writeln('help            - shows you this text');
+       writeln('about           - shows you the info about program');
+       writeln('exit            - exit the program');
+       writeln('listall         - list all 26 matrices');
+       writeln;
+       writeln('store x         - store the matrix');
+       writeln('random x        - store the random matrix');
+       writeln('clear x         - clear the matrix');
+       writeln('list x          - list the matrix');
+       writeln('det x           - counts the determinant (up to 3x3)');
+       writeln('solve x         - solves the system of linear equations');
+       writeln('                    * your matrix should be m x m+1 (square + solution vector)');
+       writeln('decimal x       - set the number of decimal places when listing matrix');
+       writeln('                    * decimal 4 -> shows 1/3 as 0.3333');
+       writeln;
+       writeln('invert x y      - stores the inversion of x into y');
+       writeln('transpose x y   - stores the transpose of x into y');
+       writeln;
+       writeln('add x y z       - add x + y and save into z');
+       writeln('multiply x y z  - multiply x * y and save into z');
+end;
+
+procedure title;
+begin
+writeln;
+writeln('  /$$      /$$  /$$$$$$  /$$$$$$$$ /$$$$$$$  /$$$$$$ /$$   /$$');
+writeln(' | $$$    /$$$ /$$__  $$|__  $$__/| $$__  $$|_  $$_/| $$  / $$');
+writeln(' | $$$$  /$$$$| $$  \ $$   | $$   | $$  \ $$  | $$  |  $$/ $$/');
+writeln(' | $$ $$/$$ $$| $$$$$$$$   | $$   | $$$$$$$/  | $$   \  $$$$/ ');
+writeln(' | $$  $$$| $$| $$__  $$   | $$   | $$__  $$  | $$     $$  $$ ');
+writeln(' | $$\  $ | $$| $$  | $$   | $$   | $$  \ $$  | $$   /$$/\  $$');
+writeln(' | $$ \/  | $$| $$  | $$   | $$   | $$  | $$ /$$$$$$| $$  \ $$');
+writeln(' |__/     |__/|__/  |__/   |__/   |__/  |__/|______/|__/  |__/');
+writeln('        ____ ____ _    ____ _    _    ____ _____ ____ ____    ');
+writeln('       /   _Y  _ Y \  /   _Y \ /Y \  /  _ Y__ __Y  _ Y  __\   ');
+writeln('       |  / | / \| |  |  / | | || |  | / \| / \ | / \|  \/|   ');
+writeln('       |  \_| |-|| |_/\  \_| \_/| |_/\ |-|| | | | \_/|    /   ');
+writeln('       \____|_/ \|____|____|____|____|_/ \| \_/ \____|_/\_\   ');
+writeln;
+end;
+
+procedure about;
+begin
+writeln;
+
+writeln(' This program was created by Ivan Kuckir, ivan@kuckir.com'  );
+writeln(' as a school project at Charles University in Prague.      ');
+writeln(' Feel free to refer all the bugs and other things to my e-mail. ');
+writeln(' Copyright (c) Ivan Kuckir 2009-2010.');
+writeln;
+end;
+
+procedure listall;
+var c:char;
+begin
+        writec('L I S T   O F   A L L   M A T R I C E S', blue);
+        writeln;
+        for c:= 'a' to 'm' do
+        begin
+                write(c, ' - ');
+                if matrices[c] = nil then write('[    ];   ')
+                else write('[xxxx];   ');
+
+                write(char(ord(c)+13), ' - ');
+                if matrices[char(ord(c)+13)] = nil then write('[    ];   ')
+                else write('[xxxx];    ');
+                writeln;
+        end;
+        writeln;
+        writeln('* [    ] - empty, [xxxx] - full');
+end;
+
+procedure store(place:char);
+var p:PMat;
+begin
+        if matrices[place] <> nil then
+        begin
+                writec('This place is not empty!', red);
+                exit;
+        end;
+
+        writec('S T O R I N G   M A T R I X', blue);
+
+        new(p);
+        writeln('Insert the height of your matrix: '); read(p^.m);
+        writeln('Insert the width of your matrix: '); read(p^.n);
+
+        if (p^.m > msize) OR (p^.n > msize) then
+        begin
+                writec('Matrix is too large!', red);
+                exit;
+        end;
+
+        for m:= 1 to p^.m do
+        for n:= 1 to p^.n do
+        begin
+                write('Matrix ', place, '(', m, ',', n, '): ');
+                read(p^.mat[m, n]);
+                writeln;
+        end;
+        matrices[place] := p;
+        writec('Matrix was successfully saved!', green);
+
+end;
+
+procedure randomMat(place:char);
+var p:PMat;
+begin
+        if matrices[place] <> nil then
+        begin
+                writec('This place is not empty!', red);
+                exit;
+        end;
+
+        writec('S T O R I N G   R A N D O M   M A T R I X', blue);
+
+        new(p);
+        writeln('Insert the height of your matrix: '); read(p^.m);
+        writeln('Insert the width of your matrix: '); read(p^.n);
+
+        if (p^.m > msize) OR (p^.n > msize) then
+        begin
+                writec('Matrix is too large!', red);
+                exit;
+        end;
+
+        randomize;
+
+        for m:= 1 to p^.m do
+        for n:= 1 to p^.n do
+                p^.mat[m, n] := round(random(10));
+
+        matrices[place] := p;
+        writec('Random matrix was successfully saved!', green);
+
+end;
+
+procedure list(place:char);
+var p:PMat;
+begin
+         writec('L I S T I N G   M A T R I X', blue);
+
+        if matrices[place] =  nil then
+        begin
+                writec('This matrix is empty!', red);
+                exit;
+        end;
+
+        p := matrices[place];
+        writeln;
+        writeln('----- Matrix ', place, ':  -----');
+        write('_|_');    for i:= 1 to p^.n do write('___________', i, '|');
+        writeln;
+
+        for m:= 1 to p^.m do
+        begin
+                writeln('  |');
+                write('_', m,'|');
+                for n:= 1 to p^.n do
+                begin
+                        //if p^.mat[m, n] > 99 then write(' ', p^.mat[m, n]:10:dn)
+                        //else if p^.mat[m, n] > 9 then write('  ', p^.mat[m, n]:10:dn)
+                        //else
+                        write('   ', p^.mat[m, n]:10:dn);
+                end;
+                writeln;
+        end;
+        writeln;
+end;
+
+procedure clear(place:char);
+begin
+        writec('C L E A R I N G   M A T R I X', blue);
+
+        if matrices[place] =  nil then
+        begin
+                writec('This matrix is already empty!', red);
+                exit;
+        end;
+
+        dispose(matrices[place]);
+        matrices[place] := nil;
+
+        writec('Matrix was successfully cleared!', green);
+end;
+
+procedure add(x:char; y:char; z:char);
+var a, b, c:PMat;
+begin
+         writec('A D D I N G   M A T R I C E S', blue);
+
+        if (matrices[x]=nil) OR (matrices[y]=nil) then
+        begin
+                writec('One of two matrices is empty!', red);
+                exit;
+        end;
+
+        if (matrices[z] <> nil)  then
+        begin
+                writec('Matrix for storing is not empty!', red);
+                exit;
+        end;
+
+        a:= matrices[x];
+        b:= matrices[y];
+
+        if (a^.m <> b^.m) OR (a^.n <> b^.n)  then
+        begin
+                writec('Matrices have different size!', red);
+                exit;
+        end;
+
+        new(c);
+        c^.m := a^.m;
+        c^.n := a^.n;
+
+        for m:= 1 to a^.m do for n:= 1 to a^.n do
+                c^.mat[m, n] := a^.mat[m, n] + b^.mat[m, n];
+        matrices[z] := c;
+
+        writec('Matrices were successfully added!', green);
+end;
+
+procedure multiply(x:char; y:char; z:char);
+var a, b, c:PMat;
+begin
+         writec('M U L T I P L Y I N G   M A T R I C E S', blue);
+
+        if (matrices[x]=nil) OR (matrices[y]=nil) then
+        begin
+                writec('One of two matrices is empty!', red);
+                exit;
+        end;
+
+        if (matrices[z] <> nil)  then
+        begin
+                writec('Matrix for storing is not empty!', red);
+                exit;
+        end;
+
+        a:= matrices[x];
+        b:= matrices[y];
+
+        if (a^.n <> b^.m)  then
+        begin
+                writec('The width of 1. matrix is not the same as the height of 2. matrix!', red);
+                exit;
+        end;
+
+        new(c);
+        c^.m := a^.m;
+        c^.n := b^.n;
+
+        for m:= 1 to a^.m do
+                for n:= 1 to b^.n do
+                begin
+                c^.mat[m,n] := 0;
+                for i := 1 to a^.n do
+                c^.mat[m,n] := a^.mat[m,i] * b^.mat[i,n] + c^.mat[m,n];
+                end;
+
+        matrices[z] := c;
+
+        writec('Matrices were successfully multiplied!', green);
+end;
+
+procedure det(place:char);
+var     a:    Matrix;
+        d:    Real;
+        t1:   Real;     //  product of "\" diagonal
+        t2:   Real;     //  product of "/" diagonal
+        m:    String;
+        ds:   String;
+begin
+        writec('D E T E R M I N A N T   O F   M A T R I X', blue);
+
+        if matrices[place] =  nil then
+        begin
+                writec('This matrix is empty!', red);
+                exit;
+        end;
+
+        a := matrices[place]^;
+
+        if a.m <> a.n then
+        begin
+                writec('This matrix is not square!', red);
+                exit;
+        end;
+
+        d:=0;
+
+        for i:= 1 to a.m do
+        begin
+                t1:=1;
+                for j:= 1 to a.m do t1:=t1*a.mat[(i+j-2) MOD a.m + 1, j];
+                t2:=1;
+                for j:= a.m downto 1 do t2:=t2*a.mat[(i+a.m-j-1) MOD a.m + 1, j];
+                d:= d + t1 - t2;
+        end;
+        str(d:10:dn, ds);
+        m:= concat('Determinant of matrix ', place, ' is: ', ds);
+        writec(m, green);
+
+end;
+
+function grade(mat:RMatrix; m,n:Integer):RMatrix;
+var     zeros: Array[1..msize] of integer; // number of zeros in each row
+        c, ic: Integer;
+        v, w: Integer;
+begin
+        for v:= 1 to m do
+        begin
+                c:=0;                   // c is the number of zeros
+                for w:= 1 to n do
+                begin
+                        if mat[v,w]=0 then inc(c)
+                        else break;
+                end;
+                zeros[v]:= c;
+        end;
+        for v:= 1 to m do
+        begin
+                c := 10000;              // c is the smallest number of zeros
+                ic:= 0;                  // index of c
+                for w:= 1 to m do
+                        if zeros[w]<c then begin c:=zeros[w]; ic:=w  end;
+                zeros[ic]:= 10000;
+                for w:= 1 to n do grade[v,w]:=mat[ic,w];
+        end;
+end;
+
+function gauss(mat:RMatrix; m:integer; n:integer):RMatrix;
+var     c,pop: Integer;
+        d: Real;
+begin
+        pop:=0;             // position of pivot
+        for j:= 1 to m do   // going through rows
+        begin
+                inc(pop);
+                mat:=grade(mat,m,n);
+                while mat[j,pop]=0 do inc(pop);
+
+                for i:= j to m do // going through this row + rest of rows
+                begin
+                        if (i>j) AND (mat[i,pop]=0) then break;
+                        d:= mat[i,pop];
+                        for c:= pop to n do  mat[i,c]:=mat[i,c]/d;
+                        if i>j then
+                        for c:= pop to n do  mat[i,c]:=mat[i,c] - mat[j,c];
+                end;
+        end;
+        gauss:=mat;
+end;
+
+function jordano(mat:RMatrix; m:integer; n:integer):RMatrix;
+var     c: Integer;
+        d: Real;
+begin
+        for i:= m-1 downto 1 do
+        begin
+                for c:= m downto i+1 do
+                begin
+                        d:=jordano[i,c];
+                        for j:= 1 to n do
+                            jordano[i,j]:= jordano[i,j] - d*jordano[c,j];
+                end;
+        end;
+end;
+
+procedure solve(place:char);
+var     mat:RMatrix;                         // real matrix - used for computing
+        p: PMat;                             // pointer at target matrix
+        c: Integer;
+        d: Real;
+begin
+        writec('S O L U T I O N   O F   L I N E A R   E Q U A T I O N S', blue);
+
+        if matrices[place] =  nil then
+        begin
+                writec('This matrix is empty!', red);
+                exit;
+        end;
+
+        if matrices[place]^.n <> matrices[place]^.m+1 then
+        begin
+                writec('The source matrix should be square + column with solutions (m x m+1)!', red);
+                exit;
+        end;
+
+        p:= matrices[place];
+
+        for i:=1 to p^.m do for j:= 1 to p^.n do mat[i,j]:= p^.mat[i,j];
+
+        mat:=gauss(mat,p^.m, p^.n);    //  conversion into graded form with 1 as pivots
+
+        if mat[p^.m, p^.n-1] = 0 then
+                if mat[p^.m, p^.n] = 0 then
+                  begin
+                    writec('There are some zero (linearly dependent) row(s) in matrix!', red);
+                    writeln;   listR(mat,p^.m, p^.n);  exit;
+                  end  else
+                  begin
+                   writec('This matrix has no solution!', red);
+                   writeln;  listR(mat,p^.m, p^.n);  exit;
+                  end;
+
+        mat:=jordano(mat,p^.m, p^.n);    // conversion into identity matrix+ solution vector
+
+        writec('The solution of matrix is:', green);
+        for i:= 1 to p^.m do
+                writeln('x',i,' = ', mat[i, p^.n]:10:6);
+end;
+
+
+procedure invert(place:char; target:char);
+var     mat:RMatrix;                         // real matrix - used for computing
+        c,p: PMat;                             // pointer at target matrix
+begin
+        writec('I N V E R T E D   M A T R I X', blue);
+
+        if matrices[place] =  nil then
+        begin
+                writec('The source matrix is empty!', red);
+                exit;
+        end;
+
+        if matrices[target] <> nil  then
+        begin
+                writec('Matrix for storing is not empty!', red);
+                exit;
+        end;
+
+        if matrices[place]^.n <> matrices[place]^.m then
+        begin
+                writec('The source matrix should be square!', red);
+                exit;
+        end;
+
+        p:= matrices[place];
+
+        for i:=1 to p^.m do for j:= 1 to p^.n do mat[i,j]:= p^.mat[i,j];
+
+        for i:= 1 to p^.m do  for j:= p^.m+1 to 2*p^.m do
+        if j=i+p^.m then mat[i,j]:= 1
+        else mat[i,j]:=0;
+
+        mat:=gauss(mat,p^.m, p^.m*2);    //  conversion into graded form with 1 as pivots
+
+        if mat[p^.m, p^.m] = 0 then
+        begin
+                writec('This matrix is singular!', red);
+                writeln;  listR(mat,p^.m, p^.n);  exit;
+        end;
+
+        mat:=jordano(mat,p^.m, p^.m*2);    // conversion into identity matrix+ solution vector
+
+        new(c);
+        c^.m := p^.m;
+        c^.n := p^.n;
+        for i:= 1 to p^.n do for j:=1 to p^.n do
+                c^.mat[i,j]:=mat[i,p^.n+j];
+        matrices[target]:=c;
+
+        //listR(mat,p^.m, p^.m*2);
+
+        writec('Inverted matrix was successfully calculated!', green);
+end;
+
+procedure transpose(place:char; target:char);
+var     mat:RMatrix;                         // real matrix - used for computing
+        c,p: PMat;                             // pointer at target matrix
+begin
+        writec('T R A N S P O S E   O F   M A T R I X', blue);
+
+        if matrices[place] =  nil then
+        begin
+                writec('The source matrix is empty!', red);
+                exit;
+        end;
+
+        if matrices[target] <> nil  then
+        begin
+                writec('Matrix for storing is not empty!', red);
+                exit;
+        end;
+
+        p:=matrices[place];
+
+        new(c);
+        c^.m := p^.n;
+        c^.n := p^.m;
+        for i:= 1 to p^.m do for j:=1 to p^.n do
+                c^.mat[j,i]:=p^.mat[i,j];
+        matrices[target]:=c;
+
+        writec('Transposed matrix was successfully calculated!', green);
+end;
+
+
+procedure parse(command:String);
+var com:Words;
+begin
+        com := Split(command, ' ');
+
+        if Length(com) = 0 then exit;
+
+        if Length(com) = 1 then
+        begin
+                if(com[0] = 'help') then help;
+                if(com[0] = 'listall') then listall;
+                if(com[0] = 'about') then about;
+
+        end;
+
+        if Length(com) = 2 then
+        begin
+                if(com[0] = 'store') then store(com[1][1]);
+                if(com[0] = 'random') then randomMat(com[1][1]);
+                if(com[0] = 'solve') then solve(com[1][1]);
+                if(com[0] = 'list' ) then list (com[1][1]);
+                if(com[0] = 'clear') then clear(com[1][1]);
+                if(com[0] = 'det')   then det(com[1][1]);
+                if(com[0] = 'decimal')   then dn:= Ord(com[1][1])-48;
+        end;
+
+        if Length(com) = 3 then
+        begin
+                if(com[0] = 'invert') then invert(com[1][1],com[2][1]);
+                if(com[0] = 'transpose') then transpose(com[1][1],com[2][1]);
+        end;
+
+        if Length(com) = 4 then
+        begin
+                if(com[0] = 'add') then add(com[1][1],com[2][1],com[3][1]);
+                if(com[0] = 'multiply') then multiply(com[1][1],com[2][1],com[3][1]);
+        end;
+
+end;
+
+begin
+        window(1,1,80,40);
+        dn:=1;
+        wn:=436157241.45645;
+        clrscr;
+        textcolor(white);
+        title;
+        writeln(' - type "help" for help');
+        repeat
+                writeln;
+                write('Command: ');
+                readln(command);
+                parse(command);
+        until command = 'exit';
+
+        writec('Thank you for using this program!', black);
+
+        readln;
+end.

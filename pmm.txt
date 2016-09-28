@@ -1,0 +1,115 @@
+program mult;
+ uses crt,dos;
+ const
+     N = 100;
+ type
+    matrix = array[1..N,1..N] of integer;
+
+{***************************}
+
+procedure matrixini(var a : matrix); {initializes the array}
+    var
+      row, col : longint;
+    begin
+      for row := 1 to N do
+        for col := 1 to N do
+          a[row,col] := (row-1) + (col-1);
+    end;
+
+{***************************}
+
+procedure zeromatrixini(var a : matrix); {zeros an array}
+    var
+      row, col : integer;
+    begin
+      for row := 1 to N do
+        for col := 1 to N do
+          a[row,col] := (0) + (0);
+    end;
+
+{***************************}
+
+procedure multmatrix(var p : matrix;var q : matrix ; var r : matrix);
+    var
+      i, j, k : integer;
+      sum : integer;
+    begin
+      for i := 1 to N do
+        for j := 1 to N do
+          begin
+            sum := 0;
+              for k := 1 to N do
+                sum := sum + p[i,k] * q[k,j];
+              r[i,j] := sum;
+          end;
+    end;
+
+{***************************}
+
+procedure print(var a:matrix);
+    var
+       r:integer;
+       c:integer;
+       avar : integer;
+begin
+  for r:=1 to N do
+  begin
+      for c := 1 to N do
+      begin
+           avar := a[r,c];
+           write(avar:4);
+      end;
+  writeln;
+  end;
+writeln;
+end;
+
+{***************************}
+
+function TheTime(w : Word) : String;   {Gives time}
+var
+  s : String;
+begin
+  Str(w:0,s);
+    if Length(s) = 1 then
+    s := '0' + s;
+    TheTime := s;
+end;
+
+{***************************}
+
+VAR  {main}
+rz, rx, q : matrix;
+h1, m1, s1, hund1, h2, m2, s2, hund2 : word;
+i: longint;
+begin
+    clrscr;
+    matrixini(rz);
+    matrixini(rx);
+    zeromatrixini(q);
+    writeln('* * * This is Team 1s Final Project. Hit ENTER to run the first algorithm. * * *');
+    readln;
+    GetTime(h1,m1,s1,hund1); {gets first time reading, multmatrix algorithm}
+      begin
+         for i:=1 to 1 do
+         multmatrix(rx, rz, q);
+      end;
+    GetTime(h1,m2,s2,hund2); {gets second time reading, multmatrix algorith1}
+    Writeln('Start time>',TheTime(m1),':',TheTime(s1),'.',TheTime(hund1));
+    Writeln('  End Time>',TheTime(m2),':',TheTime(s2),'.',TheTime(hund2));
+    Writeln;
+    Writeln('Total Time>',(m2-m1),':',(s2-s1),'.',(hund2-hund1));
+    readln;
+    Writeln('Here is the the first matrix');
+    writeln;
+    print(rx);
+    readln;
+    Writeln('Here is the second matrix');
+    writeln;
+    print(rz);
+    readln;
+    Writeln('Here is the multiplied matrix');
+    writeln;
+    print(q);
+    readln;
+ end.
